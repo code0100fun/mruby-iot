@@ -1,0 +1,35 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "OpenOCD - Versaloon",
+        "type": "shell",
+        "isBackground": true,
+        "command": "$OPENOCD_ESP32_PATH/bin/openocd -s $OPENOCD_ESP32_PATH/share/openocd/scripts -s ${workspaceFolder}/openocd -f interface/versaloon.cfg -f target/esp32.cfg"
+      },
+      {
+        "label": "Build Bootloader",
+        "type": "shell",
+        "command": "python $IDF_PATH/tools/idf.py bootloader",
+        "problemMatcher": []
+      },
+      {
+        "label": "Build Partition Table",
+        "type": "shell",
+        "command": "python $IDF_PATH/tools/idf.py partition_table",
+        "problemMatcher": []
+      },
+      {
+        "label": "Flash",
+        "type": "shell",
+        "command": "cd build && python $IDF_PATH/components/esptool_py/esptool/esptool.py write_flash @flash_project_args",
+        "problemMatcher": []
+      },
+      {
+        "label": "Monitor",
+        "type": "shell",
+        "command": "make monitor",
+        "problemMatcher": []
+      }
+    ]
+  }
