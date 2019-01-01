@@ -6,7 +6,8 @@
 	],
 	"settings": {
 		"files.associations": {
-			"freertos.h": "c"
+			"freertos.h": "c",
+			"ssd1306.h": "c"
 		}
 	}
 }
