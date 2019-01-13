@@ -6,6 +6,8 @@ This guide is written for an ESP32 with an SSD1306 like [this](https://www.aliex
 
 For JTAG debugging you will need a [compatible](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/jtag-debugging/#jtag-debugging-selecting-jtag-adapter) module like [this](https://www.aliexpress.com/item/FT2232HL-USB-to-UART-Module-Dual-Channel-USB-to-FIFO-SPI-I2C-JTAG-RS232-Module-CJMCU/32956642461.html) one from AliExpress.
 
+<img src="https://drive.google.com/uc?export=view&id=1hvMVpaldjDWjNcAwAdCkK6U8Ot58q2zY" width="300" title="ESP32 showing Hello from mruby!" />
+
 ## Setup
 
 ### CMake
