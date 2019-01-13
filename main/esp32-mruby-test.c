@@ -1,55 +1,51 @@
-/**
- * Copyright (c) 2017-2018 Tara Keeling
- *
- * This software is released under the MIT License.
- * https://opensource.org/licenses/MIT
- */
-
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
 #include <time.h>
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/queue.h"
+
 #include "ssd1306.h"
 #include "ssd1306_draw.h"
 #include "ssd1306_font.h"
 #include "ssd1306_default_if.h"
 
-#define USE_I2C_DISPLAY
-//#define USE_SPI_DISPLAY
+#include "esp_system.h"
+#include "esp_log.h"
+#include "nvs_flash.h"
+#include "esp_system.h"
+#include "esp_heap_caps.h"
 
-#if defined USE_I2C_DISPLAY
-    static const int I2CDisplayAddress = 0x3C;
-    static const int I2CDisplayWidth = 128;
-    static const int I2CDisplayHeight = 64;
-    static const int I2CResetPin = -1;
+#include "mruby.h"
+#include "mruby/irep.h"
+#include "mruby/compile.h"
+#include "mruby/error.h"
+#include "mruby/string.h"
 
-    struct SSD1306_Device I2CDisplay;
-#endif
+#include "app_mrb.h" // generated from mruby script compile
 
-#if defined USE_SPI_DISPLAY
-    static const int SPIDisplayChipSelect = 15;
-    static const int SPIDisplayWidth = 128;
-    static const int SPIDisplayHeight = 64;
-    static const int SPIResetPin = 5;
+#define MRUBY_TAG "mruby_task"
+#define OLED_TAG "oled_task"
 
-    struct SSD1306_Device SPIDisplay;
-#endif
+#define COLOR_PRINT_BLACK   "30"
+#define COLOR_PRINT_RED     "31"
+#define COLOR_PRINT_GREEN   "32"
+#define COLOR_PRINT_BROWN   "33"
+#define COLOR_PRINT_BLUE    "34"
+#define COLOR_PRINT_PURPLE  "35"
+#define COLOR_PRINT_CYAN    "36"
+#define color_printf(COLOR,format, ... ) { printf("\033[0;" COLOR "m" format "\033[0m\n", ##__VA_ARGS__); }
 
-static struct SSD1306_Device* Displays[ ] = {
-#if defined USE_I2C_DISPLAY
-    &I2CDisplay,
-#endif
-#if defined USE_SPI_DISPLAY
-    &SPIDisplay,
-#endif
-    NULL
-};
+static const int I2CDisplayAddress = 0x3C;
+static const int I2CDisplayWidth = 128;
+static const int I2CDisplayHeight = 64;
+static const int I2CResetPin = -1;
 
-const int DisplayCount = sizeof( Displays ) / sizeof( Displays[ 0 ] );
+struct SSD1306_Device I2CDisplay;
 
-const struct SSD1306_FontDef* FontList[ ] = {
+const struct SSD1306_FontDef* FontList[] = {
     &Font_droid_sans_fallback_11x13,
     &Font_droid_sans_fallback_15x17,
     &Font_droid_sans_fallback_24x28,
@@ -62,66 +58,85 @@ const struct SSD1306_FontDef* FontList[ ] = {
     NULL
 };
 
-const int FontCount = sizeof( FontList ) / sizeof( FontList[ 0 ] );
+struct GameState {
+    const char* message;
+};
 
-void SetupDemo( struct SSD1306_Device* DisplayHandle, const struct SSD1306_FontDef* Font );
-void SayHello( struct SSD1306_Device* DisplayHandle, const char* HelloText );
+QueueHandle_t game_state_queue = NULL;
 
-bool DefaultBusInit( void ) {
-    #if defined USE_I2C_DISPLAY
-        assert( SSD1306_I2CMasterInitDefault( ) == true );
-        assert( SSD1306_I2CMasterAttachDisplayDefault( &I2CDisplay, I2CDisplayWidth, I2CDisplayHeight, I2CDisplayAddress, I2CResetPin ) == true );
-    #endif
-
-    #if defined USE_SPI_DISPLAY
-        assert( SSD1306_SPIMasterInitDefault( ) == true );
-        assert( SSD1306_SPIMasterAttachDisplayDefault( &SPIDisplay, SPIDisplayWidth, SPIDisplayHeight, SPIDisplayChipSelect, SPIResetPin ) == true );
-    #endif
-
+bool init_oled(void) {
+    assert(SSD1306_I2CMasterInitDefault());
+    assert(SSD1306_I2CMasterAttachDisplayDefault(&I2CDisplay, I2CDisplayWidth, I2CDisplayHeight, I2CDisplayAddress, I2CResetPin ));
     return true;
 }
 
-void FontDisplayTask( void* Param ) {
-    struct SSD1306_Device* Display = ( struct SSD1306_Device* ) Param;
-    int NextFontTime = 0;
-    int i = 0;
+void display_task(void* param) {
+    struct SSD1306_Device* display = (struct SSD1306_Device*)param;
+    SSD1306_SetFont(display, FontList[0]);
 
-    if ( Param != NULL ) {
-        for ( i = 0; i < FontCount && FontList[ i ] != NULL; i++ ) {
-            if ( FontList[ i ] != NULL ) {
-                SSD1306_SetFont( Display, FontList[ i ] );
-                NextFontTime = time( NULL ) + 2;
+    while(true) {
+        struct GameState state;
+        xQueueReceive(game_state_queue, &(state), portMAX_DELAY);
 
-                while ( time( NULL ) < NextFontTime ) {
-                    SSD1306_Clear( Display, SSD_COLOR_BLACK );
-                    SSD1306_FontDrawAnchoredString( Display, TextAnchor_Center, "Hello!", SSD_COLOR_WHITE );
-                    SSD1306_Update( Display );
+        SSD1306_Clear(display, SSD_COLOR_BLACK);
+        SSD1306_FontDrawAnchoredString(display, TextAnchor_Center,state.message, SSD_COLOR_WHITE);
+        SSD1306_Update(display);
 
-                    vTaskDelay( pdMS_TO_TICKS( 100 ) );
-                }
-
-                printf( "On to next font\n" );
-            }
-        }
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        color_printf(COLOR_PRINT_GREEN, "free DRAM %u IRAM %u", heap_caps_get_free_size(MALLOC_CAP_8BIT), heap_caps_get_free_size(MALLOC_CAP_32BIT));
     }
 
-    printf( "Finished!\n" );
-    vTaskDelete( NULL );
+    ESP_LOGI(OLED_TAG, "%s", "oled task finished.");
+    vTaskDelete(NULL);
 }
 
-void app_main( void ) {
-    int i = 0;
+static mrb_value mrb_game_display_write_text(mrb_state *mrb, mrb_value self) {
+    char *message = NULL;
+    mrb_get_args(mrb, "z", &message);
+    struct GameState state;
+    state.message = message;
+    xQueueSend(game_state_queue, (void*)&state, portMAX_DELAY); 
+    return self;
+}
 
-    printf( "Ready...\n" );
 
-    if ( DefaultBusInit( ) == true ) {
-        printf( "BUS Init lookin good...\n" );
-        printf( "Drawing.\n" );
+void init_mruby_env(mrb_state* mrb) {
+    struct RClass *game_module = mrb_define_module(mrb, "Game");
+    struct RClass *game_display_module = mrb_define_module_under(mrb, game_module, "Display");
 
-        for ( i = 0; i < DisplayCount; i++ ) {
-            if ( Displays[ i ] != NULL ) {
-                xTaskCreate( FontDisplayTask, "FontDisplayTask", 4096, Displays[ i ], 1, NULL );
-            }
-        }
+    mrb_define_module_function(mrb, game_display_module, "write_text", mrb_game_display_write_text, MRB_ARGS_REQ(1));
+}
+
+void mruby_task(void *pvParameter)
+{
+    mrb_state *mrb = mrb_open();
+    mrbc_context *context = mrbc_context_new(mrb);
+    int ai = mrb_gc_arena_save(mrb);
+    init_mruby_env(mrb);
+    ESP_LOGI(MRUBY_TAG, "%s", "Loading binary...");
+    mrb_load_irep_cxt(mrb, app_mrb, context);
+    if (mrb->exc)
+    {
+        ESP_LOGE(MRUBY_TAG, "Exception occurred: %s", mrb_str_to_cstr(mrb, mrb_inspect(mrb, mrb_obj_value(mrb->exc))));
+        mrb->exc = 0;
     }
+    else
+    {
+        ESP_LOGI(MRUBY_TAG, "%s", "Success");
+    }
+    mrb_gc_arena_restore(mrb, ai);
+    mrbc_context_free(mrb, context);
+    mrb_close(mrb);
+
+    ESP_LOGI(MRUBY_TAG, "%s", "mruby task finished.");
+    vTaskDelete(NULL);
+
+}
+
+void app_main(void) {
+    game_state_queue = xQueueCreate(1, sizeof(struct GameState));
+    if (init_oled()) {
+        xTaskCreate(&display_task, "display_task", 4096, &I2CDisplay, 1, NULL);
+    }
+    xTaskCreate(&mruby_task, "mruby_task", 8192, NULL, 1, NULL);
 }

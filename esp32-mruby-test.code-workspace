@@ -7,7 +7,10 @@
 	"settings": {
 		"files.associations": {
 			"freertos.h": "c",
-			"ssd1306.h": "c"
+			"ssd1306.h": "c",
+			"mruby.h": "c",
+			"esp_heap_alloc_caps.h": "c",
+			"esp_heap_caps.h": "c"
 		}
 	}
 }

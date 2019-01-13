@@ -1,0 +1,1 @@
+Game::Display.write_text "Hello from mruby!"

@@ -1,3 +1,6 @@
 [submodule "components/tarablessd1306"]
 	path = components/tarablessd1306
 	url = https://github.com/TaraHoleInIt/tarablessd1306.git
+[submodule "components/mruby/mruby"]
+	path = components/mruby/mruby
+	url = https://github.com/mruby/mruby.git

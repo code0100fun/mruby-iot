@@ -19,3 +19,5 @@ include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 # The project name is used for the final binary output files
 # of the app - ie myProject.elf, myProject.bin
 project(esp32-mruby-test)
+
+add_subdirectory("components/mruby" "${CMAKE_CURRENT_BINARY_DIR}/mruby_build")

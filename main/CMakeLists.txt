@@ -1,4 +1,13 @@
-set(COMPONENT_SRCS "esp32-mruby-test.c")
+set(COMPONENT_SRCS "esp32-mruby-test.c" ${CMAKE_CURRENT_BINARY_DIR}/app_mrb.h)
+set(COMPONENT_PRIV_INCLUDEDIRS "${CMAKE_CURRENT_BINARY_DIR}")
 set(COMPONENT_ADD_INCLUDEDIRS ".")
 
 register_component()
+
+add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/esp32-mruby-test.h
+     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../components/mruby/mruby/bin/mrbc -B app_mrb -o ${CMAKE_CURRENT_BINARY_DIR}/app_mrb.h ${CMAKE_CURRENT_SOURCE_DIR}/main.rb
+     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/main.rb
+     VERBATIM)
+
+set_property(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" APPEND PROPERTY
+     ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_CURRENT_BINARY_DIR}/app_mrb.h)
