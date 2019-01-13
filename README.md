@@ -11,12 +11,17 @@ For JTAG debugging you will need a [compatible](https://docs.espressif.com/proje
 ## Setup
 
 ### CMake
-Remove existing cmake:
+
+The ESP-IDF framework is currently [transitioning to CMake](https://docs.espressif.com/projects/esp-idf/en/latest/get-started-cmake/). This project is intended to support the current `Makefile` strategy and the new CMake strategy.
+
+VS Code's CMake Tools utilizes the `CMakeLists.txt` files in the project and components to provide intellisesne information and fixes warnings that would otherwise be shown for many components. For the extension to work you will need a recent version of CMake. The extension will prompt you to update but if this fails, and you have a version older than 3.10, follow the steps below to build CMake from source and install.
+
+First, remove the existing cmake:
 ```
 $ sudo apt-get remove cmake
 ```
 
-Install cmake >= 3.10
+Install CMake >= 3.10
 
 ```
 $ wget https://github.com/Kitware/CMake/releases/download/v3.13.2/cmake-3.13.2.tar.gz
@@ -80,6 +85,10 @@ Select `Component config > TarableSSD1306`
 * exit
 
 This will write a `sdkconfig` file.
+
+### Build with CMake Tools ***WIP**
+
+If you are using VS Code then run the `Build` task. You will be prompted to scan for kits (toolchains). Select the `xtensa-esp32-elf` kit.
 
 ### Build
 
