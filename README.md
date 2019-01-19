@@ -110,6 +110,21 @@ $ make monitor
 
 ### Debug
 
+To use openocd without sudo your user needs to be in the `plugdev` group:
+```bash
+$ sudo useradd -G plugdev $USER
+```
+
+Add a udev rules file for the ft-2232:
+```bash
+$ echo 'ATTRS{idProduct}=="6010", ATTRS{idVendor}=="0403", MODE="666", GROUP="plugdev"' > /etc/udev/ruled.d/10-ft-2232-usb.rules
+```
+
+Reload the rules:
+```
+$ sudo udevadm trigger
+```
+
 TODO
 
 ## References

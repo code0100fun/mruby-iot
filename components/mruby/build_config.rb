@@ -29,6 +29,7 @@ MRuby::CrossBuild.new('esp32') do |conf|
   toolchain :gcc
 
   conf.cc do |cc|
+    puts ENV['COMPONENT_INCLUDES']
     cc.include_paths << ENV["COMPONENT_INCLUDES"].split(' ')
 
     cc.flags << '-Wno-maybe-uninitialized'
@@ -58,4 +59,5 @@ MRuby::CrossBuild.new('esp32') do |conf|
   conf.gem :core => "mruby-print"
   conf.gem :core => "mruby-compiler"
   conf.gem :github => "mruby-esp32/mruby-esp32-system"
+  # conf.gem :github => "mruby-esp32/mruby-esp32-wifi"
 end

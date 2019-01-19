@@ -2,33 +2,108 @@
     "version": "2.0.0",
     "tasks": [
       {
-        "label": "OpenOCD - Versaloon",
+        "label": "Start OpenOCD - ft-2232",
         "type": "shell",
         "isBackground": true,
-        "command": "$OPENOCD_ESP32_PATH/bin/openocd -s $OPENOCD_ESP32_PATH/share/openocd/scripts -s ${workspaceFolder}/openocd -f interface/versaloon.cfg -f target/esp32.cfg"
+        "command": "$OPENOCD_ESP32_PATH/bin/openocd -s $OPENOCD_ESP32_PATH/share/openocd/scripts -s ${workspaceFolder}/openocd -f interface/ft-2232.cfg -f board/esp32-wroom.cfg"
+      },
+      {
+        "label": "Build App",
+        "command": "make",
+        "type": "shell",
+        "args": [
+            "build"
+        ],
+        "presentation": {
+            "reveal": "always",
+            "echo": true
+        },
+        "problemMatcher": {
+            "owner": "cpp",
+            "fileLocation": "absolute",
+            "pattern": {
+                "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                "file": 1,
+                "line": 2,
+                "column": 3,
+                "severity": 4,
+                "message": 5
+            }
+        }
       },
       {
         "label": "Build Bootloader",
         "type": "shell",
-        "command": "python $IDF_PATH/tools/idf.py bootloader",
+        "command": "python",
+        "args": [
+            "$IDF_PATH/tools/idf.py",
+            "bootloader"
+        ],
+        "presentation": {
+            "reveal": "always",
+            "echo": true
+        },
         "problemMatcher": []
       },
       {
         "label": "Build Partition Table",
         "type": "shell",
-        "command": "python $IDF_PATH/tools/idf.py partition_table",
+        "command": "python",
+        "args": [
+            "$IDF_PATH/tools/idf.py",
+            "partition_table"
+        ],
+        "presentation": {
+            "reveal": "always",
+            "echo": true
+        },
         "problemMatcher": []
       },
       {
-        "label": "Flash",
+        "label": "Flash Parts",
         "type": "shell",
         "command": "cd build && python $IDF_PATH/components/esptool_py/esptool/esptool.py write_flash @flash_project_args",
         "problemMatcher": []
       },
       {
+        "label": "Flash",
+        "type":"shell",
+        "command": "make",
+        "args": [
+            "flash",
+            "ESPPORT=/dev/ttyUSB2"
+        ],
+        "presentation": {
+            "reveal": "always",
+            "echo": true
+        },
+        "problemMatcher": []
+      },
+      {
         "label": "Monitor",
-        "type": "shell",
-        "command": "make monitor",
+        "type":"shell",
+        "command": "make",
+        "args": [
+            "monitor",
+            "ESPPORT=/dev/ttyUSB2"
+        ],
+        "presentation": {
+            "reveal": "always",
+            "echo": true
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Menu Config",
+        "type":"shell",
+        "command": "make",
+        "args": [
+            "menuconfig"
+        ],
+        "presentation": {
+            "reveal": "always",
+            "echo": true
+        },
         "problemMatcher": []
       }
     ]

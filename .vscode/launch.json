@@ -4,10 +4,10 @@
       {
         "type": "gdb",
         "request": "launch",
-        "name": "Launch Program",
+        "name": "OpenOCD Debug",
         "target": "./build/${workspaceFolderBasename}.elf",
         "cwd": "${workspaceFolder}",
-        "gdbpath": "$XTENSA_PATH/bin/xtensa-esp32-elf-gdb",
+        "gdbpath": "xtensa-esp32-elf-gdb",
         "autorun": [
           "target remote :3333",
           "mon reset halt",
@@ -15,7 +15,7 @@
           "thb app_main",
           "c"
         ],
-        "preLaunchTask": "openocd"
+        "preLaunchTask": "Start OpenOCD - ft-2232"
       }
     ]
   }
